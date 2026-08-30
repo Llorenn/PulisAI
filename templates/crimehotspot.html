@@ -1,0 +1,782 @@
+{% extends "base.html" %} {% block title %}Crime Alarm Prediction{% endblock %}
+{% block content %}
+
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+  crossorigin=""
+/>
+
+<style>
+  /* Simple styling for the prediction form and result */
+  .prediction-container {
+    background: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+  }
+  .prediction-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 25px;
+    align-items: end;
+  }
+  .prediction-form label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+    font-family: Arial, sans-serif;
+  }
+  .prediction-form select,
+  .prediction-form button {
+    width: 100%;
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-family: Arial, sans-serif;
+  }
+  .prediction-form button {
+    background: #1a73e8;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+  }
+  .prediction-form button:hover {
+    background: #1557b0;
+  }
+
+  /* Multi-select dropdown styles */
+  .multi-select-wrapper {
+    position: relative;
+    width: 100%;
+  }
+  .multi-select-display {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 40px;
+    font-family: Arial, sans-serif;
+  }
+  .multi-select-display:hover {
+    border-color: #1a73e8;
+  }
+  .multi-select-display .arrow {
+    font-size: 12px;
+    color: #666;
+  }
+  .multi-select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-top: 5px;
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 2000;
+    display: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  .multi-select-dropdown.active {
+    display: block;
+  }
+  .multi-select-option {
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+  .multi-select-option:hover {
+    background: #f0f0f0;
+  }
+  .multi-select-option:first-child {
+    border-bottom: 1px solid #e0e0e0;
+    font-weight: bold;
+  }
+  .multi-select-option input[type="checkbox"],
+  .multi-select-option input[type="radio"] {
+
+    margin-right: 8px;
+    cursor: pointer;
+  }
+  .multi-select-option label {
+    margin: 0;
+    cursor: pointer;
+    font-weight: normal;
+    font-family: Arial, sans-serif;
+  }
+  .prediction-result {
+    margin-top: 30px;
+    text-align: center;
+  }
+  .prediction-result h2 {
+    font-size: 1.8em;
+    color: #333;
+  }
+  .prediction-result .alarm-box {
+    padding: 30px;
+    border-radius: 8px;
+    font-size: 2.5em;
+    font-weight: bold;
+    display: inline-block;
+    color: white;
+  }
+  /* Color-code the result */
+  .alarm-Low {
+    background-color: #4caf50;
+  }
+  .alarm-Medium {
+    background-color: #ffc107;
+    color: #333;
+  }
+  .alarm-High {
+    background-color: #f44336;
+  }
+  .alarm-Error {
+    background-color: #9e9e9e;
+  }
+
+  /* Map styling */
+  .map-container {
+    background: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+  }
+  #map {
+    height: 900px;
+    width: 100%;
+    border-radius: 8px;
+  }
+  .map-legend {
+    background: white;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    line-height: 24px;
+  }
+  .map-legend h4 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+  }
+  .map-legend div {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+  .legend-color {
+    width: 30px;
+    height: 20px;
+    margin-right: 10px;
+    border-radius: 3px;
+  }
+</style>
+
+<div class="prediction-container">
+  <h2 style="text-align: center; font-family: Arial, sans-serif">
+    Predict Crime Alarm Level
+  </h2>
+  <p style="font-family: Arial, sans-serif">
+    Select locations, months, days, and times to predict crime alarm levels. You
+    can select multiple options for each parameter.
+  </p>
+
+  <form
+    action="{{ url_for('crimehotspot') }}"
+    method="POST"
+    class="prediction-form"
+    id="predictionForm"
+    onsubmit="return validateForm()"
+  >
+    <div>
+      <label for="barangay">Select Barangay(s):</label>
+      <div class="multi-select-wrapper">
+        <div
+          class="multi-select-display"
+          id="barangayDisplay"
+          onclick="toggleDropdown('barangay')"
+        >
+          <span id="barangayText">Select Barangay/s</span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="multi-select-dropdown" id="barangayDropdown">
+          <div class="multi-select-option">
+            <input
+              type="checkbox"
+              id="barangay_all"
+              value="ALL"
+              onchange="toggleAllCheckboxes('barangay')"
+            />
+            <label for="barangay_all">Select All</label>
+          </div>
+          {% for barangay in BARANGAY_OPTIONS_PREDICT %} {% if barangay != 'ALL'
+          %}
+          <div class="multi-select-option">
+            <input
+              type="checkbox"
+              name="barangay"
+              class="barangay-checkbox"
+              value="{{ barangay }}"
+              {%
+              if
+              barangay
+              in
+              barangay_selected
+              %}checked{%
+              endif
+              %}
+              onchange="updateDisplay('barangay')"
+            />
+            <label>{{ barangay }}</label>
+          </div>
+          {% endif %} {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <label for="month">Select Month:</label>
+      <div class="multi-select-wrapper">
+        <div
+          class="multi-select-display"
+          id="monthDisplay"
+          onclick="toggleDropdown('month')"
+        >
+          <span id="monthText">Select Month</span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="multi-select-dropdown" id="monthDropdown">
+          {% for month in MONTH_OPTIONS_PREDICT %}
+          <div
+            class="multi-select-option"
+            onclick="selectSingleOption('month', '{{ month }}', event)"
+          >
+            <input
+              type="radio"
+              name="month"
+              class="month-radio"
+              value="{{
+            month }}"
+              {%
+              if
+              month|string
+              in
+              month_selected
+              %}checked{%
+              endif
+              %}
+              style="display: none"
+            />
+            <label style="cursor: pointer; width: 100%; margin: 0"
+              >{{ month }}</label
+            >
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <label for="weekday">Select Weekday:</label>
+      <div class="multi-select-wrapper">
+        <div
+          class="multi-select-display"
+          id="weekdayDisplay"
+          onclick="toggleDropdown('weekday')"
+        >
+          <span id="weekdayText">Select Weekday</span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="multi-select-dropdown" id="weekdayDropdown">
+          {% for day in WEEKDAY_OPTIONS_PREDICT %}
+          <div
+            class="multi-select-option"
+            onclick="selectSingleOption('weekday', '{{ day }}', event)"
+          >
+            <input type="radio" name="weekday" class="weekday-radio" value="{{
+            day }}" {% if day == weekday_selected %}checked{% endif %}
+            style="display: none;">
+            <label style="cursor: pointer; width: 100%; margin: 0"
+              >{{ day }}</label
+            >
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div>
+      <label for="time_of_day">Select Time of Day:</label>
+      <div class="multi-select-wrapper">
+        <div
+          class="multi-select-display"
+          id="time_of_dayDisplay"
+          onclick="toggleDropdown('time_of_day')"
+        >
+          <span id="time_of_dayText">Select Time of Day</span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="multi-select-dropdown" id="time_of_dayDropdown">
+          {% for time in TIME_OF_DAY_OPTIONS_PREDICT %}
+          <div
+            class="multi-select-option"
+            onclick="selectSingleOption('time_of_day', '{{ time }}', event)"
+          >
+            <input type="radio" name="time_of_day" class="time_of_day-radio"
+            value="{{ time }}" {% if time == time_of_day_selected %}checked{%
+            endif %} style="display: none;">
+            <label style="cursor: pointer; width: 100%; margin: 0"
+              >{{ time }}</label
+            >
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div style="display: flex; gap: 10px">
+      <button type="submit" style="flex: 1">PREDICT</button>
+      <button
+        type="button"
+        id="clearFiltersBtn"
+        onclick="clearFilters()"
+        style="flex: 1; background: #f44336"
+      >
+        CLEAR
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+  // Clear all filters
+  function clearFilters() {
+    // Reset form - this will trigger browser's default form reset
+    document.querySelector("form").reset();
+
+    // Redirect to page without query parameters
+    window.location.href = "{{ url_for('crimehotspot') }}";
+  }
+
+  // Close dropdowns when clicking outside
+  document.addEventListener("click", function (event) {
+    if (!event.target.closest(".multi-select-wrapper")) {
+      document
+        .querySelectorAll(".multi-select-dropdown")
+        .forEach((dropdown) => {
+          dropdown.classList.remove("active");
+        });
+    }
+  });
+
+  function toggleDropdown(type) {
+    event.stopPropagation();
+    const dropdown = document.getElementById(type + "Dropdown");
+    const allDropdowns = document.querySelectorAll(".multi-select-dropdown");
+
+    // Close all other dropdowns
+    allDropdowns.forEach((d) => {
+      if (d !== dropdown) d.classList.remove("active");
+    });
+
+    // Toggle current dropdown
+    dropdown.classList.toggle("active");
+  }
+
+  // Selects a single option without showing the underlying radio button
+  function selectSingleOption(type, value, event) {
+    if (event) event.stopPropagation();
+
+    // Set the radio button value
+    const radio = document.querySelector(
+      "." + type + "-radio[value='" + value + "']"
+    );
+    if (radio) {
+      radio.checked = true;
+    }
+
+    // Update display text
+    const textElement = document.getElementById(type + "Text");
+    textElement.textContent = value;
+
+    // Close the dropdown
+    const dropdown = document.getElementById(type + "Dropdown");
+    dropdown.classList.remove("active");
+  }
+
+  // Handles the radio-button dropdowns (month, weekday, time of day)
+  function updateRadioDisplay(type) {
+    const selectedRadio = document.querySelector("." + type + "-radio:checked");
+    const textElement = document.getElementById(type + "Text");
+
+    // Define proper placeholder text for each type
+    const placeholders = {
+      month: "Select Month",
+      weekday: "Select Weekday",
+      time_of_day: "Select Time of Day",
+    };
+
+    if (selectedRadio) {
+      textElement.textContent = selectedRadio.value;
+    } else {
+      textElement.textContent =
+        placeholders[type] || "Select " + type.replace("_", " ");
+    }
+  }
+
+  // Handles the multi-select checkbox dropdowns
+  function updateDisplay(type) {
+    const checkboxes = document.querySelectorAll(
+      "." + type + "-checkbox:checked"
+    );
+    const textElement = document.getElementById(type + "Text");
+    const allCheckbox = document.getElementById(type + "_all");
+
+    if (checkboxes.length === 0) {
+      textElement.textContent = "Select Barangay/s";
+    } else if (
+      checkboxes.length ===
+      document.querySelectorAll("." + type + "-checkbox").length
+    ) {
+      textElement.textContent = "All " + type + "s selected";
+      if (allCheckbox) allCheckbox.checked = true;
+    } else if (checkboxes.length <= 3) {
+      textElement.textContent = Array.from(checkboxes)
+        .map((cb) => cb.value)
+        .join(", ");
+      if (allCheckbox) allCheckbox.checked = false;
+    } else {
+      textElement.textContent = checkboxes.length + " " + type + "s selected";
+      if (allCheckbox) allCheckbox.checked = false;
+    }
+  }
+
+  function toggleAllCheckboxes(type) {
+    const allCheckbox = document.getElementById(type + "_all");
+    const checkboxes = document.querySelectorAll("." + type + "-checkbox");
+
+    checkboxes.forEach((checkbox) => {
+      checkbox.checked = allCheckbox.checked;
+    });
+
+    updateDisplay(type);
+  }
+
+  // Form validation function
+  function validateForm() {
+    // Check if at least one barangay is selected
+    const barangayChecked =
+      document.querySelectorAll(".barangay-checkbox:checked").length > 0;
+
+    // Check if month is selected
+    const monthChecked = document.querySelector(".month-radio:checked");
+
+    // Check if weekday is selected
+    const weekdayChecked = document.querySelector(".weekday-radio:checked");
+
+    // Check if time of day is selected
+    const timeChecked = document.querySelector(".time_of_day-radio:checked");
+
+    let errors = [];
+
+    if (!barangayChecked) errors.push("Please select at least one Barangay");
+    if (!monthChecked) errors.push("Please select a Month");
+    if (!weekdayChecked) errors.push("Please select a Weekday");
+    if (!timeChecked) errors.push("Please select a Time of Day");
+
+    if (errors.length > 0) {
+      alert("Missing selections:\n\n" + errors.join("\n"));
+      return false; // Prevent form submission
+    }
+
+    return true; // Allow form submission
+  }
+
+  // Initialize displays on page load
+  window.addEventListener("DOMContentLoaded", function () {
+    // Use updateDisplay for multi-selects
+    updateDisplay("barangay");
+    // Use updateRadioDisplay for single-selects
+    updateRadioDisplay("month");
+    updateRadioDisplay("weekday");
+    updateRadioDisplay("time_of_day");
+  });
+</script>
+
+{% if geojson_data %}
+<div class="map-container">
+  <h2 style="text-align: center; font-family: Arial, sans-serif">
+    Angeles City Crime Alarm Map
+  </h2>
+  <p style="font-family: Arial, sans-serif">
+    {% if barangay_selected %} Interactive map showing predicted crime alarm
+    levels for selected barangays. {% else %} Select barangays and prediction
+    parameters to view crime alarm levels. {% endif %}
+  </p>
+  <div id="map"></div>
+</div>
+{% endif %} {% if forecast_html %}
+<div class="prediction-container" style="margin-top: 20px">
+  <h2
+    style="text-align: center; font-family: Arial, sans-serif; color: #1a73e8"
+  >
+    Crime volume forecast
+  </h2>
+  <p style="font-family: Arial, sans-serif; margin-bottom: 20px"></p>
+  <div class="chart-container">{{ forecast_html | safe }}</div>
+</div>
+{% endif %}
+
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin=""
+></script>
+
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin=""
+></script>
+
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin=""
+></script>
+
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin=""
+></script>
+
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin=""
+></script>
+
+<script>
+  {% if geojson_data %}
+  (function() {
+    // Parse data from Flask
+    const geojsonData = {{ geojson_data | safe }};
+    const predictions = {{ barangay_predictions | safe }};
+    const nameMapping = {{ barangay_name_mapping | safe }};
+    const selectedBarangays = {{ selected_barangays | safe }};
+
+    // Create reverse mapping (GeoJSON name -> Crime dataset name)
+    const reverseMapping = {};
+    for (const [crimeDataName, geoJsonName] of Object.entries(nameMapping)) {
+      reverseMapping[geoJsonName] = crimeDataName;
+    }
+
+    // Initialize the map centered on Angeles City
+    const map = L.map('map').setView([15.1450, 120.5900], 12);
+
+    // Add OpenStreetMap tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
+    }).addTo(map);
+
+    // Formats a 24-hour integer into AM/PM
+    function formatHour(hour) {
+      if (hour === "N/A" || hour === null || hour < 0 || hour > 23) {
+        return "N/A";
+      }
+      const h = parseInt(hour, 10);
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const formattedHour = h % 12 === 0 ? 12 : h % 12;
+      return `${formattedHour}:00 ${ampm}`;
+    }
+
+    // Function to get color based on alarm level
+    function getColor(alarmLevel) {
+      switch(alarmLevel) {
+        case 'Low': return '#4CAF50';      // Green
+        case 'Medium': return '#FFC107';   // Yellow
+        case 'High': return '#F44336';     // Red
+        default: return '#4CAF50';         // Green for no data (treat as Low)
+      }
+    }
+
+    // Function to style each feature
+    function style(feature) {
+      const geoJsonName = feature.properties.ADM4_EN;
+      const crimeDataName = reverseMapping[geoJsonName];
+
+      const predictionData = predictions[crimeDataName]; // Get the prediction object
+      const alarmLevel = predictionData ? predictionData.level : null; // Get the level from the object
+
+      // Only color selected barangays
+      const isSelected = selectedBarangays.includes(crimeDataName);
+
+      if (isSelected && alarmLevel) {
+        return {
+          fillColor: getColor(alarmLevel), // Pass the level string to getColor
+          weight: 2,
+          opacity: 1,
+          color: 'white',
+          dashArray: '3',
+          fillOpacity: 0.7
+        };
+      } else {
+        // Non-selected barangays are transparent/light gray
+        return {
+          fillColor: '#E0E0E0',
+          weight: 1,
+          opacity: 0.5,
+          color: '#999',
+          dashArray: '5',
+          fillOpacity: 0.2
+        };
+      }
+    }
+
+    // Function for hover effects
+    function highlightFeature(e) {
+      const layer = e.target;
+      layer.setStyle({
+        weight: 5,
+        color: '#666',
+        dashArray: '',
+        fillOpacity: 0.9
+      });
+      layer.bringToFront();
+    }
+
+    function resetHighlight(e) {
+      geojsonLayer.resetStyle(e.target);
+    }
+
+    // Function to handle clicks
+    function onEachFeature(feature, layer) {
+      const geoJsonName = feature.properties.ADM4_EN;
+      const crimeDataName = reverseMapping[geoJsonName];
+
+      const predictionData = predictions[crimeDataName]; // Get the prediction object
+      const alarmLevel = predictionData ? predictionData.level : null;
+      const modeHour = predictionData ? predictionData.mode_hour : "N/A";
+      const formattedModeHour = formatHour(modeHour); // Format the hour
+
+      const modeCrime = predictionData ? predictionData.mode_crime : "N/A";
+
+      const crimeDensity = predictionData ? predictionData.crime_density : "N/A";
+      const formattedCrimeDensity = (crimeDensity === "N/A" || isNaN(parseFloat(crimeDensity)))
+          ? "N/A"
+          : `${parseFloat(crimeDensity).toFixed(2)} / km²`;
+
+      const population = predictionData ? predictionData.population : "N/A";
+      const formattedPopulation = (population === "N/A" || isNaN(parseInt(population)))
+          ? "N/A"
+          : parseInt(population).toLocaleString('en-US');
+
+      const area_sqkm = predictionData ? predictionData.area_sqkm : "N/A";
+      const formattedArea = (area_sqkm === "N/A" || isNaN(parseFloat(area_sqkm)))
+          ? "N/A"
+          : `${parseFloat(area_sqkm).toFixed(2)} km²`;
+
+      const isSelected = selectedBarangays.includes(crimeDataName);
+
+      // Bind popup
+      if (isSelected && alarmLevel) {
+        layer.bindPopup(`
+          <div style="font-family: Arial, sans-serif; min-width: 200px;">
+            <h3 style="margin: 0 0 10px 0; color: #333; text-align: center;">${geoJsonName}</h3>
+
+            <p style="margin: 5px 0;"><strong>Alarm Level:</strong>
+              <span style="color: ${getColor(alarmLevel)}; font-weight: bold;">
+                ${alarmLevel}
+              </span>
+            </p>
+
+            <p style="margin: 5px 0;"><strong>Population:</strong>
+              <span style="font-weight: bold; color: #555;">
+                ${formattedPopulation}
+              </span>
+            </p>
+
+            <p style="margin: 5px 0;"><strong>Area:</strong>
+              <span style="font-weight: bold; color: #555;">
+                ${formattedArea}
+              </span>
+            </p>
+
+            <p style="margin: 5px 0;"><strong>Crime Density:</strong>
+              <span style="font-weight: bold; color: #555;">
+                ${formattedCrimeDensity}
+              </span>
+            </p>
+
+            <p style="margin: 5px 0;"><strong>Most Freq. Crime:</strong>
+              <span style="font-weight: bold; color: #555;">
+                ${modeCrime}
+              </span>
+            </p>
+
+            <p style="margin: 5px 0;"><strong>Peak Time:</strong>
+              <span style="font-weight: bold; color: #555;">
+                ${formattedModeHour}
+              </span>
+            </p>
+          </div>
+        `);
+      } else {
+        layer.bindPopup(`
+          <div style="font-family: Arial, sans-serif;">
+            <h3 style="margin: 0 0 10px 0; color: #333; text-align: center;">${geoJsonName}</h3>
+            <p style="margin: 5px 0; color: #999;">Not selected for prediction</p>
+          </div>
+        `);
+      }
+
+      // Add hover effects only for selected barangays
+      if (isSelected) {
+        layer.on({
+          mouseover: highlightFeature,
+          mouseout: resetHighlight
+        });
+      }
+    }
+
+    // Add GeoJSON layer to map
+    const geojsonLayer = L.geoJSON(geojsonData, {
+      style: style,
+      onEachFeature: onEachFeature
+    }).addTo(map);
+
+    // Add legend
+    const legend = L.control({position: 'bottomright'});
+
+    legend.onAdd = function(map) {
+      const div = L.DomUtil.create('div', 'map-legend');
+      div.innerHTML = `
+        <h4>Crime Alarm Level</h4>
+        <div><div class="legend-color" style="background: #4CAF50;"></div> Low</div>
+        <div><div class="legend-color" style="background: #FFC107;"></div> Medium</div>
+        <div><div class="legend-color" style="background: #F44336;"></div> High</div>
+      `;
+      return div;
+    };
+
+    legend.addTo(map);
+
+    // Fit map to barangay boundaries
+    map.fitBounds(geojsonLayer.getBounds());
+  })();
+  {% endif %}
+</script>
+{% endblock %} {% block top_nav %}{% endblock top_nav %} {% block filters_form
+%}{% endblock filters_form %}

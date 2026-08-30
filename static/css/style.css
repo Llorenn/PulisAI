@@ -1,0 +1,491 @@
+/* General Reset */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+}
+
+/* --- Header Logo Style --- */
+.header-logo {
+  height: 100px;
+  width: 100px;
+  margin-right: 10px;
+  vertical-align: middle;
+  border-radius: 0;
+
+  /* --- FIX: Replaced zoom/pan with contain/center --- */
+  background-size: 275px;
+  background-position: 40% 49%;
+  background-repeat: no-repeat;
+}
+
+/* Top bar */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1a73e8bb;
+  color: #fff;
+  padding: 10px 15px;
+}
+.top-bar h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logout-btn {
+  padding: 6px 12px;
+  border: none;
+  background: #fff;
+  color: #1a73e8;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.logout-btn:hover {
+  background: #e6e6e6;
+}
+
+/* Navigation tabs */
+.nav {
+  display: flex;
+  justify-content: center; /* <-- THIS IS THE FIX */
+  gap: 15px;
+  background: #f4f4f4;
+  padding: 10px 20px;
+}
+
+.nav a {
+  text-decoration: none;
+  color: #000000;
+  font-size: 2.5rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+/* Main layout */
+.container {
+  display: flex;
+  padding: 20px;
+  gap: 20px; /* Space between sidebar and content */
+}
+
+.sidebar {
+  width: 200px; /* Fixed width for navigation */
+  flex-shrink: 0;
+}
+.sidebar a {
+  text-decoration: none;
+}
+.sidebar a button {
+  padding: 10px;
+  border: none;
+  background: #eee;
+  cursor: pointer;
+  width: 100%;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  text-align: left;
+}
+.sidebar a button:disabled {
+  background: #1a73e8;
+  color: #fff;
+  cursor: not-allowed;
+}
+
+/* Content area */
+.content {
+  flex-grow: 1; /* Content area takes up the remaining space */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0; /* --- THIS IS THE CRITICAL FIX FOR OVERFLOW --- */
+}
+
+/* --- OLD INPUTS STYLE (kept for compatibility if needed elsewhere) --- */
+.inputs {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.inputs > div {
+  display: flex;
+  flex-direction: column;
+}
+.inputs label {
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+.inputs select {
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* 1. The container for individual charts/tables */
+.chart-container {
+  position: relative;
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  box-sizing: border-box; /* Ensures padding doesn't add to width */
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* 2. The container for the 2x2 grid */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Force 2 columns */
+  gap: 20px;
+  width: 100%;
+}
+
+/* 3. Sets height ONLY for charts inside the 2x2 grid */
+.charts-grid .chart-container {
+  height: 400px;
+}
+
+/* 4. The container for the side-by-side stats */
+.stat-row {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+  flex-wrap: nowrap; /* Keep all 6 boxes in one row */
+  overflow-x: auto; /* Allow horizontal scroll if needed on small screens */
+}
+
+/* 5. The individual stat boxes */
+.stat-box {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 20px;
+  text-align: center;
+  flex: 1 1 0; /* Equal width for all boxes */
+  min-width: 150px; /* Minimum width to prevent squishing */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+.stat-box h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.2em;
+  color: #555;
+}
+.stat-box p {
+  margin: 0;
+  font-size: 2.5em;
+  font-weight: bold;
+  word-wrap: break-word; /* Allow text wrapping for long names */
+}
+
+/* Responsive for tablets and mobile */
+@media (max-width: 992px) {
+  .container {
+    flex-direction: column; /* Stack sidebar and content */
+  }
+  .sidebar {
+    width: 100%;
+    display: flex;
+    flex-direction: row; /* Make sidebar buttons horizontal */
+    flex-wrap: wrap;
+  }
+  .sidebar a {
+    flex-grow: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .charts-grid {
+    grid-template-columns: 1fr; /* single column on small screens */
+  }
+  .stat-row {
+    flex-direction: column; /* Stack stats vertically */
+  }
+  .stat-box {
+    width: 100%;
+    box-sizing: border-box; /* ensure padding is included */
+  }
+}
+
+@media (max-width: 600px) {
+  .inputs {
+    flex-direction: column; /* stack filters vertically */
+    align-items: stretch;
+  }
+  .top-bar {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+/* --- Alert / Flashed Message Styling --- */
+.alert {
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  border: 1px solid; /* Base border */
+}
+
+/* Style for success messages */
+.alert-success {
+  background: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
+}
+
+/* Style for error messages */
+.alert-error {
+  background: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+}
+
+/* Style for 'else' (we'll call it 'info') */
+.alert-info {
+  background: #d1ecf1;
+  border-color: #bee5eb;
+  color: #0c5460;
+}
+
+/* --- NEW FILTER BOX STYLES (Matches user image) --- */
+
+/* Styles the main box container */
+.filter-box {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 24px;
+  background-color: #ffffff;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); /* Subtle shadow added */
+}
+
+/* Styles the title */
+.filter-box h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 1.5rem; /* Increased size slightly */
+  color: #333;
+}
+
+/* Styles the subtitle */
+.filter-box p {
+  margin-top: 0;
+  margin-bottom: 24px; /* More space below subtitle */
+  color: #666;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Makes the form horizontal */
+.filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px; /* Increased gap for better spacing */
+  align-items: flex-end;
+}
+
+/* Styles the container for each label/select pair */
+.filter-input-group {
+  flex: 1;
+  min-width: 220px; /* Slightly wider minimum */
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-input-group label {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 8px; /* More space between label and input */
+  color: #333;
+}
+
+/* Styles the dropdowns */
+.filter-input-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: #fff;
+  height: 42px; /* Fixed height for alignment */
+  transition: border-color 0.2s;
+}
+
+.filter-input-group select:focus {
+  outline: none;
+  border-color: #1a73e8; /* Highlight on focus */
+}
+
+/* Styles the button container */
+.filter-button-group {
+  flex-shrink: 0;
+  display: flex;
+  gap: 10px;
+}
+
+/* Styles the blue 'Apply Filters' button */
+.filter-submit-btn {
+  background-color: #1a73e8; /* Matches your top bar color */
+  color: white;
+  padding: 0 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  height: 42px; /* Matches select height */
+}
+
+.filter-submit-btn:hover {
+  background-color: #1557b0; /* Darker shade for hover */
+}
+
+/* Styles the red 'Clear' button */
+.filter-clear-btn {
+  background-color: #f44336;
+  color: white;
+  padding: 0 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  height: 42px;
+}
+
+.filter-clear-btn:hover {
+  background-color: #d32f2f;
+}
+
+/* Responsive adjustments for the new filter box */
+@media (max-width: 768px) {
+  .filter-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filter-input-group {
+    min-width: 100%;
+  }
+  .filter-button-group {
+    flex-direction: column;
+  }
+  .filter-submit-btn, .filter-clear-btn {
+    width: 100%;
+    margin-top: 10px;
+  }
+}
+
+/* Date Range Picker Styles */
+.date-range-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.date-range-container input[type="date"] {
+  flex: 1;
+  min-width: 140px;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+}
+
+.date-range-container input[type="date"]:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+.date-separator {
+  color: #666;
+  font-weight: 500;
+}
+
+/* Multi-Select Dropdown Styles for Visualizations */
+.multi-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.multi-select-display {
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 40px;
+  font-family: Arial, sans-serif;
+}
+
+.multi-select-display:hover {
+  border-color: #1a73e8;
+}
+
+.multi-select-display .arrow {
+  font-size: 12px;
+  color: #666;
+}
+
+.multi-select-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-top: 5px;
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 2000;
+  display: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.multi-select-dropdown.active {
+  display: block;
+}
+
+.multi-select-option {
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.multi-select-option:hover {
+  background: #f0f0f0;
+}
+
+.multi-select-option:first-child {
+  border-bottom: 1px solid #e0e0e0;
+  font-weight: bold;
+}
+
+.multi-select-option input[type="checkbox"] {
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.multi-select-option label {
+  margin: 0;
+  cursor: pointer;
+  font-weight: normal;
+  font-family: Arial, sans-serif;
+  flex: 1;
+}

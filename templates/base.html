@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}PulisAI Dashboard{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head_resources %}{% endblock %}
+</head>
+<body>
+  <div class="top-bar">
+    <div class="header-logo" style="background-image: url('{{ url_for('static', filename='images/pulisai_logo1.png') }}');"></div>
+    <div class="user-info">
+      <span>Welcome, {{ session.get('username', 'User') }}!</span>
+      <a href="{{ url_for('logout') }}" style="text-decoration: none;">
+        <button class="logout-btn">Logout</button>
+      </a>
+    </div>
+</div>
+
+  {% block top_nav %}
+  <div class="nav">
+    <a href="{{ url_for('graph') }}"></a>
+  </div>
+  {% endblock top_nav %}
+
+  <div class="container">
+    <div class="sidebar">
+       <a href="{{ url_for('crimehotspot') }}"><button {% if active == 'crimehotspot' %}disabled{% endif %}>Crime Hotspot</button></a>
+       <a href="{{ url_for('graph') }}"><button {% if active == 'graph' %}disabled{% endif %}>Dashboard</button></a>
+       <a href="{{ url_for('upload') }}"><button {% if active == 'upload' %}disabled{% endif %}>Database</button></a>
+    </div>
+
+    <div class="content">
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% block filters_form %}
+      <!-- New Filter Box Container -->
+      <div class="filter-box">
+        <h3>Filter Crime Data</h3>
+        <p>Select filters to customize the visualizations.</p>
+
+        <form action="{{ url_for('graph') }}" method="GET" class="filter-form" id="filterForm">
+
+          <!-- Crime Type Dropdown (Multi-Select) -->
+          <div class="filter-input-group">
+            <label for="crime">Crime Type:</label>
+            <div class="multi-select-wrapper">
+              <div class="multi-select-display" id="crimeDisplay" onclick="toggleDropdownViz('crime')">
+                <span id="crimeText">Select Crime Type/s</span>
+                <span class="arrow">▼</span>
+              </div>
+              <div class="multi-select-dropdown" id="crimeDropdown">
+                <div class="multi-select-option">
+                  <input type="checkbox" id="crime_all" value="ALL" onchange="toggleAllCheckboxesViz('crime')" />
+                  <label for="crime_all">Select All</label>
+                </div>
+                {% for crime in CRIME_OPTIONS %}
+                  {% if crime != 'ALL' %}
+                  <div class="multi-select-option">
+                    <input type="checkbox" name="crime" id="crime_{{ loop.index }}" value="{{ crime | e }}"
+                      onchange="updateDisplayViz('crime')" {% if crime in crime_selected %}checked{% endif %} />
+                    <label for="crime_{{ loop.index }}">{{ crime }}</label>
+                  </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Year Dropdown (Multi-Select) -->
+          <div class="filter-input-group">
+            <label for="year">Year:</label>
+            <div class="multi-select-wrapper">
+              <div class="multi-select-display" id="yearDisplay" onclick="toggleDropdownViz('year')">
+                <span id="yearText">Select Year/s</span>
+                <span class="arrow">▼</span>
+              </div>
+              <div class="multi-select-dropdown" id="yearDropdown">
+                <div class="multi-select-option">
+                  <input type="checkbox" id="year_all" value="ALL" onchange="toggleAllCheckboxesViz('year')" />
+                  <label for="year_all">Select All</label>
+                </div>
+                {% for year in YEAR_OPTIONS %}
+                  {% if year != 'ALL' %}
+                  <div class="multi-select-option">
+                    <input type="checkbox" name="year" id="year_{{ loop.index }}" value="{{ year | e }}"
+                      onchange="updateDisplayViz('year')" {% if year|string in year_selected|map('string')|list %}checked{% endif %} />
+                    <label for="year_{{ loop.index }}">{{ year }}</label>
+                  </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Month Dropdown (Multi-Select) -->
+          <div class="filter-input-group">
+            <label for="month">Month:</label>
+            <div class="multi-select-wrapper">
+              <div class="multi-select-display" id="monthDisplay" onclick="toggleDropdownViz('month')">
+                <span id="monthText">Select Month/s</span>
+                <span class="arrow">▼</span>
+              </div>
+              <div class="multi-select-dropdown" id="monthDropdown">
+                <div class="multi-select-option">
+                  <input type="checkbox" id="month_all" value="ALL" onchange="toggleAllCheckboxesViz('month')" />
+                  <label for="month_all">Select All</label>
+                </div>
+                {% for month in MONTH_OPTIONS_VIZ %}
+                  {% if month != 'ALL' %}
+                  <div class="multi-select-option">
+                    <input type="checkbox" name="month" id="month_{{ loop.index }}" value="{{ month | e }}"
+                      onchange="updateDisplayViz('month')" {% if month in month_selected %}checked{% endif %} />
+                    <label for="month_{{ loop.index }}">{{ month }}</label>
+                  </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Weekday Dropdown (Multi-Select) -->
+          <div class="filter-input-group">
+            <label for="weekday">Day of week:</label>
+            <div class="multi-select-wrapper">
+              <div class="multi-select-display" id="weekdayDisplay" onclick="toggleDropdownViz('weekday')">
+                <span id="weekdayText">Select Weekday/s</span>
+                <span class="arrow">▼</span>
+              </div>
+              <div class="multi-select-dropdown" id="weekdayDropdown">
+                <div class="multi-select-option">
+                  <input type="checkbox" id="weekday_all" value="ALL" onchange="toggleAllCheckboxesViz('weekday')" />
+                  <label for="weekday_all">Select All</label>
+                </div>
+                {% for weekday in WEEKDAY_OPTIONS_VIZ %}
+                  {% if weekday != 'ALL' %}
+                  <div class="multi-select-option">
+                    <input type="checkbox" name="weekday" id="weekday_{{ loop.index }}" value="{{ weekday | e }}"
+                      onchange="updateDisplayViz('weekday')" {% if weekday in weekday_selected %}checked{% endif %} />
+                    <label for="weekday_{{ loop.index }}">{{ weekday }}</label>
+                  </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+
+          <!-- Time of Day Dropdown (Multi-Select) -->
+          <div class="filter-input-group">
+            <label for="time_of_day">Time of Day:</label>
+            <div class="multi-select-wrapper">
+              <div class="multi-select-display" id="time_of_dayDisplay" onclick="toggleDropdownViz('time_of_day')">
+                <span id="time_of_dayText">Select Time of Day</span>
+                <span class="arrow">▼</span>
+              </div>
+              <div class="multi-select-dropdown" id="time_of_dayDropdown">
+                <div class="multi-select-option">
+                  <input type="checkbox" id="time_of_day_all" value="ALL" onchange="toggleAllCheckboxesViz('time_of_day')" />
+                  <label for="time_of_day_all">Select All</label>
+                </div>
+                {% for tod in TIME_OF_DAY_OPTIONS_VIZ %}
+                  {% if tod != 'ALL' %}
+                  <div class="multi-select-option">
+                    <input type="checkbox" name="time_of_day" id="time_of_day_{{ loop.index }}" value="{{ tod | e }}"
+                      onchange="updateDisplayViz('time_of_day')" {% if tod in time_of_day_selected %}checked{% endif %} />
+                    <label for="time_of_day_{{ loop.index }}">{{ tod }}</label>
+                  </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Date Range Picker -->
+          <div class="filter-input-group">
+            <label for="start_date">Date Range:</label>
+            <div class="date-range-container">
+              <input type="date" id="start_date" name="start_date" value="{{ start_date }}" min="{{ min_date_limit }}" max="{{ max_date_limit }}" placeholder="Start Date">
+              <span class="date-separator">to</span>
+              <input type="date" id="end_date" name="end_date" value="{{ end_date }}" min="{{ min_date_limit }}" max="{{ max_date_limit }}" placeholder="End Date">
+            </div>
+          </div>
+
+          <!-- Apply and Clear Buttons -->
+          <div class="filter-button-group">
+            <button type="submit" class="filter-submit-btn">APPLY FILTERS</button>
+            <button type="button" class="filter-clear-btn" onclick="clearVisualizationFilters()">CLEAR</button>
+          </div>
+
+        </form>
+      </div>
+
+      <script>
+        // Clear all filters on Visualizations page
+        function clearVisualizationFilters() {
+          // Reset all checkboxes
+          document.querySelectorAll('.filter-form input[type="checkbox"]').forEach(checkbox => {
+            checkbox.checked = false;
+          });
+
+          // Clear date inputs
+          document.getElementById('start_date').value = '';
+          document.getElementById('end_date').value = '';
+
+          // Update all displays to show "All"
+          updateDisplayViz('crime');
+          updateDisplayViz('year');
+          updateDisplayViz('month');
+          updateDisplayViz('weekday');
+          updateDisplayViz('time_of_day');
+
+          // Reload page without filters
+          window.location.href = "{{ url_for('graph') }}";
+        }
+
+        // Multi-select dropdown functions for Visualizations page
+        function toggleDropdownViz(type) {
+          const dropdown = document.getElementById(type + 'Dropdown');
+          dropdown.classList.toggle('active');
+
+          // Close other dropdowns
+          const allDropdowns = document.querySelectorAll('.multi-select-dropdown');
+          allDropdowns.forEach(dd => {
+            if (dd.id !== type + 'Dropdown') {
+              dd.classList.remove('active');
+            }
+          });
+        }
+
+        function updateDisplayViz(type) {
+          const checkboxes = document.querySelectorAll(`input[name="${type}"]:checked`);
+          const textSpan = document.getElementById(type + 'Text');
+          const selectAll = document.getElementById(type + '_all');
+
+          const placeholder = type === 'time_of_day' ? 'Select Time of Day' :
+                            `Select ${type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ')}/s`;
+
+          if (checkboxes.length === 0) {
+            textSpan.textContent = placeholder;
+            if (selectAll) selectAll.checked = false;
+          } else if (checkboxes.length === 1) {
+            textSpan.textContent = checkboxes[0].value;
+          } else {
+            textSpan.textContent = checkboxes.length + ' selected';
+          }
+
+          // Update "Select All" checkbox state
+          const allCheckboxes = document.querySelectorAll(`input[name="${type}"]`);
+          if (selectAll) {
+            selectAll.checked = checkboxes.length === allCheckboxes.length;
+          }
+        }
+
+        function toggleAllCheckboxesViz(type) {
+          const selectAll = document.getElementById(type + '_all');
+          const checkboxes = document.querySelectorAll(`input[name="${type}"]`);
+          checkboxes.forEach(cb => {
+            cb.checked = selectAll.checked;
+          });
+          updateDisplayViz(type);
+        }
+
+        // Initialize displays on page load
+        window.addEventListener('DOMContentLoaded', () => {
+          ['crime', 'year', 'month', 'weekday', 'time_of_day'].forEach(type => {
+            updateDisplayViz(type);
+          });
+        });
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+          if (!event.target.closest('.multi-select-wrapper')) {
+            document.querySelectorAll('.multi-select-dropdown').forEach(dd => {
+              dd.classList.remove('active');
+            });
+          }
+        });
+      </script>
+      {% endblock filters_form %}
+
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</body>
+</html>

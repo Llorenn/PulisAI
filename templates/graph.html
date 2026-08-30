@@ -1,0 +1,53 @@
+{% extends "base.html" %} {% block title %}PulisAI Dashboard{% endblock %} {%
+block content %}
+<div class="stat-row" style="margin-top: 20px">
+  <div class="stat-box">
+    <h3>Top Barangay</h3>
+    <p>{{ top_barangay }}</p>
+  </div>
+  <div class="stat-box">
+    <h3>Top Crime</h3>
+    <p>{{ top_crime }}</p>
+  </div>
+  <div class="stat-box">
+    <h3>Total Crimes</h3>
+    <p>{{ total_crimes }}</p>
+  </div>
+  <div class="stat-box">
+    <h3>Total Solved Crimes</h3>
+    <p>{{ total_solved }}</p>
+  </div>
+  <div class="stat-box">
+    <h3>Total Under Investigation</h3>
+    <p>{{ total_underinvestigation }}</p>
+  </div>
+  <div class="stat-box">
+    <h3>Total Cleared</h3>
+    <p>{{ total_cleared }}</p>
+  </div>
+  <div class="stat-box">
+    <h3>Total Suspects</h3>
+    <p>{{ total_suspects }}</p>
+  </div>
+  <div class="stat-box">
+    <h3>Total Victims</h3>
+    <p>{{ total_victims }}</p>
+  </div>
+</div>
+
+<div class="chart-container" style="height: 600px; margin-bottom: 20px">
+  {{ map_html | safe }}
+</div>
+
+<div class="chart-container" style="margin-top: 20px; height: auto">
+  {{ table_html | safe }}
+</div>
+
+<div class="charts-grid" style="margin-top: 20px">
+  <div class="chart-container">{{ pie_html | safe }}</div>
+  <div class="chart-container">{{ line_html | safe }}</div>
+  <div class="chart-container">{{ bar_html | safe }}</div>
+  <div class="chart-container">{{ day_bar_html | safe }}</div>
+</div>
+
+{% endblock %}

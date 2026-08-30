@@ -1,0 +1,733 @@
+{% extends "base.html" %} {% block title %}Database - Upload & Retrain Model{%
+endblock %} {% block filters_form %}
+<!-- No filters on Upload page -->
+{% endblock %} {% block content %}
+<div class="upload-container">
+  <!-- I. Table of focus_df -->
+  <div class="table-section">
+    <div class="table-header">
+      <h3>Focus Crime Dataset</h3>
+      <button id="downloadCsvBtn" class="download-btn">
+        Download as CSV
+      </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="table-filters">
+      <div class="filter-group">
+        <label>Start Date:</label>
+        <input type="date" id="filterStartDate" placeholder="Start Date" />
+      </div>
+      <div class="filter-group">
+        <label>End Date:</label>
+        <input type="date" id="filterEndDate" placeholder="End Date" />
+      </div>
+      <div class="filter-group">
+        <label>Search Barangay:</label>
+        <input
+          type="text"
+          id="filterBarangay"
+          placeholder="Type to search..."
+        />
+      </div>
+      <div class="filter-group">
+        <label>Search Focus Crime:</label>
+        <input type="text" id="filterCrime" placeholder="Type to search..." />
+      </div>
+      <div class="filter-group">
+        <label>Search Offense ID:</label>
+        <input
+          type="text"
+          id="filterOffenseId"
+          placeholder="Type to search..."
+        />
+      </div>
+      <div class="filter-actions">
+        <button id="searchBtn" class="search-btn">Search</button>
+        <button id="clearFiltersBtn" class="clear-btn">Clear</button>
+      </div>
+    </div>
+
+    <!-- Table Container -->
+    <div class="table-container">
+      <table id="focusDataTable">
+        <thead>
+          <tr>
+            <th>Offense ID</th>
+            <th>Barangay</th>
+            <th>Date</th>
+            <th>Time Committed</th>
+            <th>Offense Committed</th>
+            <th>Focus Crime</th>
+            <th>Crime Type</th>
+            <th>Case Status</th>
+            <th>Year</th>
+            <th>Month</th>
+            <th>Weekday</th>
+            <th>Time of Day</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          {% for row in focus_data %}
+          <tr>
+            <td>{{ row['Offense ID'] }}</td>
+            <td>{{ row['Barangay'] }}</td>
+            <td>{{ row['Date'] }}</td>
+            <td>{{ row['Time Committed'] }}</td>
+            <td>{{ row['Offense Committed'] }}</td>
+            <td>{{ row['Focus_Crime'] }}</td>
+            <td>{{ row['Crime Type'] }}</td>
+            <td>{{ row['Case Status'] }}</td>
+            <td>{{ row['Year'] }}</td>
+            <td>{{ row['Month'] }}</td>
+            <td>{{ row['Weekday'] }}</td>
+            <td>{{ row['Time_of_Day'] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="table-info">
+      <span id="recordCount">Total Records: {{ focus_data|length }}</span>
+    </div>
+  </div>
+
+  <!-- II. Upload Raw Data Files Section -->
+  <div class="upload-box">
+    <h3>Upload Raw Data Files</h3>
+    <p class="instruction">Please upload all three required CSV files:</p>
+
+    <form
+      action="{{ url_for('upload') }}"
+      method="POST"
+      enctype="multipart/form-data"
+      id="uploadForm"
+    >
+      <!-- Crime Data File -->
+      <div class="file-input-group">
+        <label for="crime_file">
+          <span class="file-label">Crime Data</span>
+          <span class="required">*</span>
+        </label>
+        <input
+          type="file"
+          id="crime_file"
+          name="crime_file"
+          accept=".csv"
+          required
+        />
+        <small
+          >Contains: Offense ID, Barangay, Date, Time Committed, Offense
+          Committed, etc.</small
+        >
+      </div>
+
+      <!-- Suspects Data File -->
+      <div class="file-input-group">
+        <label for="suspect_file">
+          <span class="file-label">Suspects Data</span>
+          <span class="required">*</span>
+        </label>
+        <input
+          type="file"
+          id="suspect_file"
+          name="suspect_file"
+          accept=".csv"
+          required
+        />
+        <small
+          >Contains: Offense ID, Age, Gender, Barangay, Offense
+          (Consolidated)</small
+        >
+      </div>
+
+      <!-- Victims Data File -->
+      <div class="file-input-group">
+        <label for="victim_file">
+          <span class="file-label">Victims Data</span>
+          <span class="required">*</span>
+        </label>
+        <input
+          type="file"
+          id="victim_file"
+          name="victim_file"
+          accept=".csv"
+          required
+        />
+        <small
+          >Contains: Offense ID, Age, Gender, Barangay, Offense
+          (Consolidated)</small
+        >
+      </div>
+
+      <!-- Submit Button -->
+      <div class="submit-button-group">
+        <button type="submit" class="upload-submit-btn">
+          UPLOAD & RETRAIN MODEL
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- III. Success Message (appears after successful upload) -->
+  {% if success_message %}
+  <div class="alert alert-success">
+    <h3>{{ success_message }}</h3>
+    {% if retrain_stats %}
+    <div class="retrain-stats">
+      <h4>Training Statistics:</h4>
+      <ul>
+        <li>
+          <strong>Original Data (2017-2024):</strong> {{
+          retrain_stats.original_rows }} rows
+        </li>
+        <li>
+          <strong>New Data (2025):</strong> {{ retrain_stats.new_rows }} rows
+        </li>
+        <li>
+          <strong>Combined Dataset:</strong> {{ retrain_stats.combined_rows }}
+          rows
+        </li>
+        <li>
+          <strong>Training Data Shape:</strong> {{ retrain_stats.train_shape }}
+        </li>
+      </ul>
+      <h4>Alarm Level Distribution:</h4>
+      <ul>
+        <li>
+          <strong>2017-2024:</strong> Low: {{ retrain_stats.old_alarm.Low }},
+          Medium: {{ retrain_stats.old_alarm.Medium }}, High: {{
+          retrain_stats.old_alarm.High }}
+        </li>
+        <li>
+          <strong>2017-2025 (Combined):</strong> Low: {{
+          retrain_stats.new_alarm.Low }}, Medium: {{
+          retrain_stats.new_alarm.Medium }}, High: {{
+          retrain_stats.new_alarm.High }}
+        </li>
+      </ul>
+      <h4>Thresholds:</h4>
+      <ul>
+        <li>
+          <strong>Q25 (Low/Medium boundary):</strong> Old: {{
+          retrain_stats.old_q25 }} → New: {{ retrain_stats.new_q25 }}
+        </li>
+        <li>
+          <strong>Q75 (Medium/High boundary):</strong> Old: {{
+          retrain_stats.old_q75 }} → New: {{ retrain_stats.new_q75 }}
+        </li>
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %} {% if error_message %}
+  <div class="alert alert-error">
+    <h3>{{ error_message }}</h3>
+  </div>
+  {% endif %}
+</div>
+
+<style>
+  .upload-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* Table Section Styles */
+  .table-section {
+    background: #fff;
+    border: 2px solid #1a73e8;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .table-header h3 {
+    color: #1a73e8;
+    margin: 0;
+  }
+
+  .download-btn {
+    background: #34a853;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+  }
+
+  .download-btn:hover {
+    background: #2d8e47;
+    transform: translateY(-2px);
+  }
+
+  .table-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 4px;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 150px;
+  }
+
+  .filter-group label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    font-size: 13px;
+    color: #333;
+  }
+
+  .filter-group input {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  .filter-actions {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  .search-btn,
+  .clear-btn {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+    white-space: nowrap;
+  }
+
+  .search-btn {
+    background: #1a73e8;
+    color: white;
+  }
+
+  .search-btn:hover {
+    background: #1557b0;
+  }
+
+  .clear-btn {
+    background: #f44336;
+    color: white;
+  }
+
+  .clear-btn:hover {
+    background: #d32f2f;
+  }
+
+  .table-container {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 500px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+
+  #focusDataTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  #focusDataTable thead {
+    position: sticky;
+    top: 0;
+    background: #1a73e8;
+    color: white;
+    z-index: 10;
+  }
+
+  #focusDataTable th {
+    padding: 12px 8px;
+    text-align: left;
+    font-weight: bold;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  #focusDataTable td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #eee;
+    border-right: 1px solid #eee;
+  }
+
+  #focusDataTable tbody tr:hover {
+    background: #f5f5f5;
+  }
+
+  .table-info {
+    margin-top: 10px;
+    text-align: right;
+    color: #666;
+    font-weight: bold;
+  }
+
+  /* Upload Box Styles */
+  .upload-box {
+    background: #fff;
+    border: 2px solid #1a73e8;
+    border-radius: 8px;
+    padding: 30px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .upload-box h3 {
+    color: #1a73e8;
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+
+  .instruction {
+    color: #666;
+    margin-bottom: 25px;
+  }
+
+  .file-input-group {
+    margin-bottom: 25px;
+  }
+
+  .file-input-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #333;
+  }
+
+  .file-label {
+    font-size: 16px;
+  }
+
+  .required {
+    color: #d32f2f;
+    margin-left: 4px;
+  }
+
+  .file-input-group input[type="file"] {
+    width: 100%;
+    padding: 12px;
+    border: 2px dashed #ccc;
+    border-radius: 4px;
+    background: #f9f9f9;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .file-input-group input[type="file"]:hover {
+    border-color: #1a73e8;
+    background: #e3f2fd;
+  }
+
+  .file-input-group small {
+    display: block;
+    margin-top: 5px;
+    color: #888;
+    font-size: 13px;
+  }
+
+  .submit-button-group {
+    text-align: center;
+    margin-top: 30px;
+  }
+
+  .upload-submit-btn {
+    background: #1a73e8;
+    color: #fff;
+    border: none;
+    padding: 15px 40px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .upload-submit-btn:hover {
+    background: #1557b0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
+  }
+
+  /* Alert Styles */
+  .alert {
+    padding: 20px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+  }
+
+  .alert-success {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+  }
+
+  .alert-error {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+  }
+
+  .retrain-stats {
+    margin-top: 15px;
+    background: #fff;
+    padding: 15px;
+    border-radius: 4px;
+  }
+
+  .retrain-stats h4 {
+    color: #1a73e8;
+    margin-top: 15px;
+    margin-bottom: 10px;
+  }
+
+  .retrain-stats ul {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .retrain-stats li {
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+  }
+</style>
+
+<script>
+  // Store original data
+  let originalData = [];
+  let filteredData = [];
+
+  // Initialize on page load
+  document.addEventListener("DOMContentLoaded", function () {
+    // Store original table data
+    const rows = document.querySelectorAll("#focusDataTable tbody tr");
+    rows.forEach((row) => {
+      const cells = row.querySelectorAll("td");
+      originalData.push({
+        offenseId: cells[0].textContent,
+        barangay: cells[1].textContent,
+        date: cells[2].textContent,
+        time: cells[3].textContent,
+        offense: cells[4].textContent,
+        focusCrime: cells[5].textContent,
+        crimeType: cells[6].textContent,
+        caseStatus: cells[7].textContent,
+        year: cells[8].textContent,
+        month: cells[9].textContent,
+        weekday: cells[10].textContent,
+        timeOfDay: cells[11].textContent,
+      });
+    });
+    filteredData = [...originalData];
+  });
+
+  // Search functionality
+  document.getElementById("searchBtn").addEventListener("click", function () {
+    const startDate = document.getElementById("filterStartDate").value;
+    const endDate = document.getElementById("filterEndDate").value;
+    const barangayFilter = document
+      .getElementById("filterBarangay")
+      .value.toLowerCase();
+    const crimeFilter = document
+      .getElementById("filterCrime")
+      .value.toLowerCase();
+    const offenseIdFilter = document
+      .getElementById("filterOffenseId")
+      .value.toLowerCase();
+
+    filteredData = originalData.filter((row) => {
+      let matches = true;
+
+      // Date range filter
+      if (startDate || endDate) {
+        // Parse date from DD/MM/YYYY format to Date object
+        const dateParts = row.date.split("/");
+        if (dateParts.length === 3) {
+          // Create date from DD/MM/YYYY - convert to YYYY-MM-DD for proper comparison
+          const rowDate = new Date(
+            dateParts[2],
+            dateParts[1] - 1,
+            dateParts[0]
+          );
+          const startDateObj = startDate ? new Date(startDate) : null;
+          const endDateObj = endDate ? new Date(endDate) : null;
+
+          if (startDateObj && rowDate < startDateObj) matches = false;
+          if (endDateObj && rowDate > endDateObj) matches = false;
+        }
+      }
+
+      // Barangay filter (starts with)
+      if (
+        barangayFilter &&
+        !row.barangay.toLowerCase().startsWith(barangayFilter)
+      ) {
+        matches = false;
+      }
+
+      // Crime filter (contains anywhere)
+      if (crimeFilter && !row.focusCrime.toLowerCase().includes(crimeFilter)) {
+        matches = false;
+      }
+
+      // Offense ID filter (starts with)
+      if (
+        offenseIdFilter &&
+        !row.offenseId.toLowerCase().startsWith(offenseIdFilter)
+      ) {
+        matches = false;
+      }
+
+      return matches;
+    });
+
+    updateTable();
+  });
+
+  // Clear filters
+  document
+    .getElementById("clearFiltersBtn")
+    .addEventListener("click", function () {
+      document.getElementById("filterStartDate").value = "";
+      document.getElementById("filterEndDate").value = "";
+      document.getElementById("filterBarangay").value = "";
+      document.getElementById("filterCrime").value = "";
+      document.getElementById("filterOffenseId").value = "";
+
+      filteredData = [...originalData];
+      updateTable();
+    });
+
+  // Update table display
+  function updateTable() {
+    const tbody = document.getElementById("tableBody");
+    tbody.innerHTML = "";
+
+    filteredData.forEach((row) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+            <td>${row.offenseId}</td>
+            <td>${row.barangay}</td>
+            <td>${row.date}</td>
+            <td>${row.time}</td>
+            <td>${row.offense}</td>
+            <td>${row.focusCrime}</td>
+            <td>${row.crimeType}</td>
+            <td>${row.caseStatus}</td>
+            <td>${row.year}</td>
+            <td>${row.month}</td>
+            <td>${row.weekday}</td>
+            <td>${row.timeOfDay}</td>
+        `;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById(
+      "recordCount"
+    ).textContent = `Total Records: ${filteredData.length}`;
+  }
+
+  // Download CSV
+  document
+    .getElementById("downloadCsvBtn")
+    .addEventListener("click", function () {
+      const headers = [
+        "Offense ID",
+        "Barangay",
+        "Date",
+        "Time Committed",
+        "Offense Committed",
+        "Focus Crime",
+        "Crime Type",
+        "Case Status",
+        "Year",
+        "Month",
+        "Weekday",
+        "Time of Day",
+      ];
+
+      let csvContent = headers.join(",") + "\n";
+
+      filteredData.forEach((row) => {
+        const rowData = [
+          row.offenseId,
+          `"${row.barangay}"`,
+          row.date,
+          row.time,
+          `"${row.offense}"`,
+          row.focusCrime,
+          row.crimeType,
+          row.caseStatus,
+          row.year,
+          row.month,
+          row.weekday,
+          row.timeOfDay,
+        ];
+        csvContent += rowData.join(",") + "\n";
+      });
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", "focus_df_filtered.csv");
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+
+  // Upload form validation
+  document
+    .getElementById("uploadForm")
+    .addEventListener("submit", function (e) {
+      const crimeFile = document.getElementById("crime_file").files[0];
+      const suspectFile = document.getElementById("suspect_file").files[0];
+      const victimFile = document.getElementById("victim_file").files[0];
+
+      if (!crimeFile || !suspectFile || !victimFile) {
+        e.preventDefault();
+        alert("Please select all three required files!");
+        return false;
+      }
+
+      // Check file extensions
+      if (
+        !crimeFile.name.endsWith(".csv") ||
+        !suspectFile.name.endsWith(".csv") ||
+        !victimFile.name.endsWith(".csv")
+      ) {
+        e.preventDefault();
+        alert("All files must be CSV format!");
+        return false;
+      }
+
+      // Show loading message
+      const submitBtn = document.querySelector(".upload-submit-btn");
+      submitBtn.innerHTML = "Processing... Please wait (1-2 minutes)";
+      submitBtn.disabled = true;
+    });
+</script>
+
+{% endblock %}
