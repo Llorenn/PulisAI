@@ -14,7 +14,7 @@ print("="*60)
 print("XGBOOST MODEL TRAINING - PULISAI")
 print("="*60)
 
-# --- 1. Load Data ---
+# Load data
 dataset_path = 'data/focus_df.csv'
 
 try:
@@ -26,7 +26,7 @@ except FileNotFoundError as e:
 
     exit()
 
-# --- 2. Use ENTIRE dataset for training (matching notebook approach) ---
+# Train on the entire dataset, matching the notebook
 print("\n" + "="*60)
 print("DATA PREPARATION")
 print("="*60)
@@ -34,7 +34,7 @@ print("="*60)
 train_df = focus_df
 print(f"\nUsing entire dataset for training: {train_df.shape}")
 
-# --- 3. Aggregation Function ---
+# Aggregation
 def aggregate(df):
     """
     Aggregate crime data by Barangay, Month, Weekday, and Time_of_Day
@@ -89,7 +89,7 @@ def aggregate(df):
 
 train_df_agg = aggregate(train_df)
 
-# --- 4. Define Alarm Level ---
+# Alarm levels
 print("\n" + "="*60)
 print("ALARM LEVEL CLASSIFICATION")
 print("="*60)
@@ -124,7 +124,7 @@ for level in ['Low', 'Medium', 'High']:
     percentage = (count / len(train_df_agg)) * 100
     print(f"   {level:8s}: {count:4d} records ({percentage:5.2f}%)")
 
-# --- 5. Prepare Training Data ---
+# Prepare training data
 print("\n" + "="*60)
 print("FEATURE SELECTION")
 print("="*60)
@@ -161,7 +161,7 @@ print(f"   X_test:  {X_test.shape}")
 print(f"   y_train: {y_train.shape}")
 print(f"   y_test:  {y_test.shape}")
 
-# --- 6. Train XGBoost Model ---
+# Train
 print("\n" + "="*60)
 print("XGBOOST MODEL TRAINING")
 print("="*60)
@@ -201,7 +201,7 @@ xgb_grid_search.fit(X_train, y_train)
 
 best_xgb = xgb_grid_search.best_estimator_
 
-# --- 7. Evaluate Model ---
+# Evaluate
 print("\n" + "="*60)
 print("MODEL EVALUATION")
 print("="*60)
@@ -239,7 +239,7 @@ cm = confusion_matrix(y_test, y_pred)
 print(cm)
 print("   (Rows=Actual, Columns=Predicted: [Low, Medium, High])")
 
-# --- 8. Save Model and Configuration ---
+# Save model and configuration
 print("\n" + "="*60)
 print("SAVING MODEL")
 print("="*60)

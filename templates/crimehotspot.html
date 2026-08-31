@@ -9,7 +9,7 @@
 />
 
 <style>
-  /* Simple styling for the prediction form and result */
+  /* Prediction form and result */
   .prediction-container {
     background: #fff;
     padding: 25px;
@@ -361,7 +361,6 @@
 <script>
   // Clear all filters
   function clearFilters() {
-    // Reset form - this will trigger browser's default form reset
     document.querySelector("form").reset();
 
     // Redirect to page without query parameters
@@ -496,10 +495,10 @@
 
     if (errors.length > 0) {
       alert("Missing selections:\n\n" + errors.join("\n"));
-      return false; // Prevent form submission
+      return false;
     }
 
-    return true; // Allow form submission
+    return true;
   }
 
   // Initialize displays on page load
@@ -602,30 +601,30 @@
       return `${formattedHour}:00 ${ampm}`;
     }
 
-    // Function to get color based on alarm level
+    // Maps an alarm level to its fill colour
     function getColor(alarmLevel) {
       switch(alarmLevel) {
-        case 'Low': return '#4CAF50';      // Green
-        case 'Medium': return '#FFC107';   // Yellow
-        case 'High': return '#F44336';     // Red
-        default: return '#4CAF50';         // Green for no data (treat as Low)
+        case 'Low': return '#4CAF50';
+        case 'Medium': return '#FFC107';
+        case 'High': return '#F44336';
+        default: return '#4CAF50';         // no data on file, rendered as Low
       }
     }
 
-    // Function to style each feature
+    // Per-barangay choropleth styling
     function style(feature) {
       const geoJsonName = feature.properties.ADM4_EN;
       const crimeDataName = reverseMapping[geoJsonName];
 
-      const predictionData = predictions[crimeDataName]; // Get the prediction object
-      const alarmLevel = predictionData ? predictionData.level : null; // Get the level from the object
+      const predictionData = predictions[crimeDataName];
+      const alarmLevel = predictionData ? predictionData.level : null;
 
       // Only color selected barangays
       const isSelected = selectedBarangays.includes(crimeDataName);
 
       if (isSelected && alarmLevel) {
         return {
-          fillColor: getColor(alarmLevel), // Pass the level string to getColor
+          fillColor: getColor(alarmLevel),
           weight: 2,
           opacity: 1,
           color: 'white',
@@ -661,15 +660,15 @@
       geojsonLayer.resetStyle(e.target);
     }
 
-    // Function to handle clicks
+    // Popup contents for a clicked barangay
     function onEachFeature(feature, layer) {
       const geoJsonName = feature.properties.ADM4_EN;
       const crimeDataName = reverseMapping[geoJsonName];
 
-      const predictionData = predictions[crimeDataName]; // Get the prediction object
+      const predictionData = predictions[crimeDataName];
       const alarmLevel = predictionData ? predictionData.level : null;
       const modeHour = predictionData ? predictionData.mode_hour : "N/A";
-      const formattedModeHour = formatHour(modeHour); // Format the hour
+      const formattedModeHour = formatHour(modeHour);
 
       const modeCrime = predictionData ? predictionData.mode_crime : "N/A";
 

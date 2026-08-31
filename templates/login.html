@@ -12,8 +12,8 @@
       }
 
       .footer .image-credit {
-        font-size: 0.8em; /* Makes the credit text a bit smaller */
-        color: #e0e0e0; /* Makes it slightly dimmer than the main copyright */
+        font-size: 0.8em;
+        color: #e0e0e0;
         margin-top: 5px;
       }
 
@@ -26,7 +26,7 @@
         background-position: center;
         background-repeat: no-repeat;
         background-blend-mode: multiply;
-        background-color: rgba(0, 0, 0, 0.322); /* Darken the image slightly */
+        background-color: rgba(0, 0, 0, 0.322); /* darkens the photo behind the card */
 
         min-height: 100vh;
         display: flex;
@@ -42,16 +42,15 @@
       }
 
       .card {
-        /* Lighter, softer glass effect for a brighter background */
-        background: rgba(255, 255, 255, 0.8); /* More opaque white */
+        background: rgba(255, 255, 255, 0.8);
         border-radius: 16px;
 
-        backdrop-filter: blur(8px); /* Slightly less blur for more visibility */
+        backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
 
-        border: 1px solid rgba(255, 255, 255, 0.5); /* Clearer white border */
+        border: 1px solid rgba(255, 255, 255, 0.5);
 
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); /* Softer shadow */
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
 
         padding: 40px;
         animation: fadeIn 0.5s ease-in;
@@ -76,18 +75,17 @@
       .logo h1 {
         font-size: 2.5em;
         font-weight: 700;
-        /* Darker text for readability on lighter card */
         color: #0d1b2a;
         margin: 0;
       }
 
       .logo p {
         font-size: 1.1em;
-        color: #555; /* Dark gray for subtitle */
+        color: #555;
         margin-top: 5px;
       }
 
-      /* Error Message Styling - keep consistent for clarity */
+      /* Error message */
       .error-message {
         background-color: #f8d7da;
         color: #721c24;
@@ -107,31 +105,29 @@
         display: block;
         margin-bottom: 8px;
         font-weight: 600;
-        color: #333; /* Dark gray for labels */
+        color: #333;
       }
 
-      /* Input field styles */
+      /* Inputs */
       .form-group input {
         width: 100%;
         padding: 12px 15px;
-        /* Almost opaque white input for better contrast */
         background: rgba(255, 255, 255, 0.9);
-        border: 1px solid #ccc; /* Softer border */
+        border: 1px solid #ccc;
         border-radius: 4px;
         font-size: 1em;
-        color: #333; /* Dark text inside input */
+        color: #333;
         transition: border-color 0.2s ease, background-color 0.2s ease;
       }
 
-      /* Placeholder text color */
       .form-group input::placeholder {
-        color: #888; /* Slightly darker placeholder */
+        color: #888;
       }
 
       .form-group input:focus {
         outline: none;
-        border-color: #004085; /* Professional blue on focus */
-        background-color: #fff; /* Solid white on focus */
+        border-color: #004085;
+        background-color: #fff;
         box-shadow: 0 0 0 2px rgba(0, 64, 133, 0.1);
       }
 
@@ -149,18 +145,17 @@
         cursor: pointer;
         font-size: 0.9em;
         font-weight: 600;
-        color: #004085; /* Professional blue for toggle text */
+        color: #004085;
         padding: 0;
       }
 
-      /* Strong blue button for contrast */
       .btn-primary {
         width: 100%;
         padding: 14px;
-        background-color: #004085; /* Professional blue */
+        background-color: #004085;
         border: none;
         border-radius: 4px;
-        color: white; /* White text on blue button */
+        color: white;
         font-size: 1.1em;
         font-weight: 600;
         cursor: pointer;
@@ -169,13 +164,13 @@
       }
 
       .btn-primary:hover {
-        background-color: #00336a; /* Darker blue on hover */
+        background-color: #00336a;
       }
 
       .footer {
         text-align: center;
         margin-top: 25px;
-        color: #ffffff; /* Darker footer text for readability */
+        color: #ffffff;
         font-size: 0.9em;
       }
     </style>
@@ -248,7 +243,6 @@
         }
       }
 
-      // Auto-focus on username field
       window.addEventListener("load", function () {
         document.getElementById("username").focus();
       });

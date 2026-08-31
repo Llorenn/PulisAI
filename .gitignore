@@ -1,9 +1,16 @@
 # Generated data. Reproducible from a seed via generate_data.py, and the real
-# police dataset must never be committed here.
-data/focus_df.csv
-data/crimes_*.csv
-data/suspects_*.csv
-data/victims_*.csv
+# police dataset must never be committed here. Deny-by-default: everything
+# under data/ is ignored, and the one public file is re-allowed explicitly.
+data/*
+!data/angeles_city_other_info.csv
+
+# Working directory the notebooks read from -- holds the confidential ACPO
+# extracts (Dataset/raw/crimes.csv, suspects.csv, victims.csv).
+Dataset/
+
+# Loose data drops anywhere in the tree.
+*.csv
+!data/angeles_city_other_info.csv
 
 # Trained models. Rebuilt by xgboost_model.py from whatever data is present.
 *.joblib

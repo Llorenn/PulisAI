@@ -19,3 +19,22 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+Third-party assets
+
+The MIT licence above covers the source code. It does not cover the following
+files, which are included under their own terms and are not the copyright of
+the author:
+
+  static/images/pnp.jpeg          Philippine National Police seal and
+                                  headquarters photograph, from the PNP
+                                  Facebook page. Used for identification only;
+                                  this project is not endorsed by or
+                                  affiliated with the PNP.
+  angeles_city_barangays.geojson  Philippine administrative boundaries,
+                                  published as open data.
+  data/angeles_city_other_info.csv
+                                  Population and land area figures from the
+                                  Philippine Statistics Authority census.

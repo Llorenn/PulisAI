@@ -1,19 +1,15 @@
-/* General Reset */
 body {
   margin: 0;
   font-family: Arial, sans-serif;
   background: #f4f4f4;
 }
 
-/* --- Header Logo Style --- */
 .header-logo {
   height: 100px;
   width: 100px;
   margin-right: 10px;
   vertical-align: middle;
   border-radius: 0;
-
-  /* --- FIX: Replaced zoom/pan with contain/center --- */
   background-size: 275px;
   background-position: 40% 49%;
   background-repeat: no-repeat;
@@ -52,7 +48,7 @@ body {
 /* Navigation tabs */
 .nav {
   display: flex;
-  justify-content: center; /* <-- THIS IS THE FIX */
+  justify-content: center;
   gap: 15px;
   background: #f4f4f4;
   padding: 10px 20px;
@@ -70,11 +66,11 @@ body {
 .container {
   display: flex;
   padding: 20px;
-  gap: 20px; /* Space between sidebar and content */
+  gap: 20px;
 }
 
 .sidebar {
-  width: 200px; /* Fixed width for navigation */
+  width: 200px;
   flex-shrink: 0;
 }
 .sidebar a {
@@ -98,14 +94,14 @@ body {
 
 /* Content area */
 .content {
-  flex-grow: 1; /* Content area takes up the remaining space */
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  min-width: 0; /* --- THIS IS THE CRITICAL FIX FOR OVERFLOW --- */
+  min-width: 0; /* allow shrinking below content width */
 }
 
-/* --- OLD INPUTS STYLE (kept for compatibility if needed elsewhere) --- */
+/* Legacy filter inputs */
 .inputs {
   display: flex;
   gap: 15px;
@@ -127,49 +123,46 @@ body {
   border-radius: 4px;
 }
 
-/* 1. The container for individual charts/tables */
+/* Chart panels */
 .chart-container {
   position: relative;
   width: 100%;
   border: 1px solid #ddd;
   border-radius: 5px;
   padding: 10px;
-  box-sizing: border-box; /* Ensures padding doesn't add to width */
+  box-sizing: border-box;
   background: #fff;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-/* 2. The container for the 2x2 grid */
 .charts-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* Force 2 columns */
+  grid-template-columns: 1fr 1fr;
   gap: 20px;
   width: 100%;
 }
 
-/* 3. Sets height ONLY for charts inside the 2x2 grid */
 .charts-grid .chart-container {
   height: 400px;
 }
 
-/* 4. The container for the side-by-side stats */
+/* Stat tiles */
 .stat-row {
   display: flex;
   flex-direction: row;
   gap: 15px;
-  flex-wrap: nowrap; /* Keep all 6 boxes in one row */
-  overflow-x: auto; /* Allow horizontal scroll if needed on small screens */
+  flex-wrap: nowrap;
+  overflow-x: auto;
 }
 
-/* 5. The individual stat boxes */
 .stat-box {
   background: #f9f9f9;
   border: 1px solid #ddd;
   border-radius: 5px;
   padding: 20px;
   text-align: center;
-  flex: 1 1 0; /* Equal width for all boxes */
-  min-width: 150px; /* Minimum width to prevent squishing */
+  flex: 1 1 0;
+  min-width: 150px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 .stat-box h3 {
@@ -181,18 +174,18 @@ body {
   margin: 0;
   font-size: 2.5em;
   font-weight: bold;
-  word-wrap: break-word; /* Allow text wrapping for long names */
+  word-wrap: break-word;
 }
 
-/* Responsive for tablets and mobile */
+/* Responsive */
 @media (max-width: 992px) {
   .container {
-    flex-direction: column; /* Stack sidebar and content */
+    flex-direction: column;
   }
   .sidebar {
     width: 100%;
     display: flex;
-    flex-direction: row; /* Make sidebar buttons horizontal */
+    flex-direction: row;
     flex-wrap: wrap;
   }
   .sidebar a {
@@ -202,20 +195,20 @@ body {
 
 @media (max-width: 768px) {
   .charts-grid {
-    grid-template-columns: 1fr; /* single column on small screens */
+    grid-template-columns: 1fr;
   }
   .stat-row {
-    flex-direction: column; /* Stack stats vertically */
+    flex-direction: column;
   }
   .stat-box {
     width: 100%;
-    box-sizing: border-box; /* ensure padding is included */
+    box-sizing: border-box;
   }
 }
 
 @media (max-width: 600px) {
   .inputs {
-    flex-direction: column; /* stack filters vertically */
+    flex-direction: column;
     align-items: stretch;
   }
   .top-bar {
@@ -224,77 +217,68 @@ body {
   }
 }
 
-/* --- Alert / Flashed Message Styling --- */
+/* Alerts */
 .alert {
   padding: 12px 20px;
   margin-bottom: 20px;
   border-radius: 6px;
-  border: 1px solid; /* Base border */
+  border: 1px solid;
 }
 
-/* Style for success messages */
 .alert-success {
   background: #d4edda;
   border-color: #c3e6cb;
   color: #155724;
 }
 
-/* Style for error messages */
 .alert-error {
   background: #f8d7da;
   border-color: #f5c6cb;
   color: #721c24;
 }
 
-/* Style for 'else' (we'll call it 'info') */
 .alert-info {
   background: #d1ecf1;
   border-color: #bee5eb;
   color: #0c5460;
 }
 
-/* --- NEW FILTER BOX STYLES (Matches user image) --- */
-
-/* Styles the main box container */
+/* Filter box */
 .filter-box {
   border: 1px solid #ddd;
   border-radius: 8px;
   padding: 24px;
   background-color: #ffffff;
   margin-bottom: 20px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); /* Subtle shadow added */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
-/* Styles the title */
 .filter-box h3 {
   margin-top: 0;
   margin-bottom: 8px;
   font-weight: 600;
-  font-size: 1.5rem; /* Increased size slightly */
+  font-size: 1.5rem;
   color: #333;
 }
 
-/* Styles the subtitle */
 .filter-box p {
   margin-top: 0;
-  margin-bottom: 24px; /* More space below subtitle */
+  margin-bottom: 24px;
   color: #666;
   font-size: 14px;
   line-height: 1.5;
 }
 
-/* Makes the form horizontal */
 .filter-form {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px; /* Increased gap for better spacing */
+  gap: 20px;
   align-items: flex-end;
 }
 
-/* Styles the container for each label/select pair */
 .filter-input-group {
   flex: 1;
-  min-width: 220px; /* Slightly wider minimum */
+  min-width: 220px;
   display: flex;
   flex-direction: column;
 }
@@ -302,11 +286,10 @@ body {
 .filter-input-group label {
   font-weight: 600;
   font-size: 14px;
-  margin-bottom: 8px; /* More space between label and input */
+  margin-bottom: 8px;
   color: #333;
 }
 
-/* Styles the dropdowns */
 .filter-input-group select {
   width: 100%;
   padding: 10px 12px;
@@ -314,25 +297,23 @@ body {
   border-radius: 6px;
   font-size: 14px;
   background-color: #fff;
-  height: 42px; /* Fixed height for alignment */
+  height: 42px;
   transition: border-color 0.2s;
 }
 
 .filter-input-group select:focus {
   outline: none;
-  border-color: #1a73e8; /* Highlight on focus */
+  border-color: #1a73e8;
 }
 
-/* Styles the button container */
 .filter-button-group {
   flex-shrink: 0;
   display: flex;
   gap: 10px;
 }
 
-/* Styles the blue 'Apply Filters' button */
 .filter-submit-btn {
-  background-color: #1a73e8; /* Matches your top bar color */
+  background-color: #1a73e8;
   color: white;
   padding: 0 24px;
   border: none;
@@ -341,14 +322,13 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s;
-  height: 42px; /* Matches select height */
+  height: 42px;
 }
 
 .filter-submit-btn:hover {
-  background-color: #1557b0; /* Darker shade for hover */
+  background-color: #1557b0;
 }
 
-/* Styles the red 'Clear' button */
 .filter-clear-btn {
   background-color: #f44336;
   color: white;
@@ -366,7 +346,7 @@ body {
   background-color: #d32f2f;
 }
 
-/* Responsive adjustments for the new filter box */
+/* Responsive */
 @media (max-width: 768px) {
   .filter-form {
     flex-direction: column;
@@ -384,7 +364,7 @@ body {
   }
 }
 
-/* Date Range Picker Styles */
+/* Date range picker */
 .date-range-container {
   display: flex;
   align-items: center;
@@ -413,7 +393,7 @@ body {
   font-weight: 500;
 }
 
-/* Multi-Select Dropdown Styles for Visualizations */
+/* Multi-select dropdown */
 .multi-select-wrapper {
   position: relative;
   width: 100%;

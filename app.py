@@ -16,20 +16,14 @@ import calendar
 
 app = Flask(__name__)
 
-# Signs the session cookie. Generated per process when unset, which logs
-# everyone out on restart -- set PULISAI_SECRET_KEY to keep sessions alive.
 app.secret_key = os.environ.get('PULISAI_SECRET_KEY') or secrets.token_hex(32)
 
-# LOGIN CREDENTIALS
-# Read from the environment so no working password sits in the repository.
-# The default exists only so a fresh clone runs; override both before any
-# deployment:  export PULISAI_USER=... PULISAI_PASSWORD=...
 VALID_USERS = {
     os.environ.get('PULISAI_USER', 'admin'):
         os.environ.get('PULISAI_PASSWORD', 'pulisai'),
 }
 
-#LOGIN DECORATOR
+# Login decorator
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -75,7 +69,7 @@ BARANGAY_NAME_MAPPING = {
     'NINOY AQUINO': 'Ninoy Aquino (Marisol)'
 }
 
-#Data Loading and Column Definitions (from Gradio app)
+# Data loading and column definitions
 
 COL_DATASET = "data/focus_df.csv"
 COL_CRIME_DESC = "Focus_Crime"
@@ -92,7 +86,7 @@ COL_TIME_OF_DAY = "Time_of_Day"
 COL_DAY_OF_WEEK = "Day_of_Week"
 COL_OFFENSE = "Offense Committed"
 
-#Month Names Mapping (used in both visualization and prediction)
+# Month names, used by both the dashboard and prediction
 MONTH_NAMES = {
     1: 'January (Q1)', 2: 'February (Q1)', 3: 'March (Q1)', 4: 'April (Q2)',
     5: 'May (Q2)', 6: 'June (Q2)', 7: 'July (Q3)', 8: 'August (Q3)',
@@ -120,7 +114,7 @@ COL_NUM_SUSPECTS = 'Num_Suspects'
 COL_FOCUS_CRIME = 'Focus_Crime'
 
 
-# Load dataset FOR PLOTTING
+# Load dataset for plotting
 try:
     df = pd.read_csv(COL_DATASET)
     for col in VICTIM_AGE_COLS:
@@ -138,7 +132,7 @@ except Exception as e:
     print(f"An error occurred while loading the dataset: {e}")
     df = pd.DataFrame()
 
-#Dynamic Options (from DataFrame) FOR PLOTTING
+# Dynamic filter options, derived from the dataframe
 if not df.empty:
     sorted_crimes = sorted(df[COL_CRIME_DESC].unique())
     CRIME_OPTIONS = np.insert(sorted_crimes, 0, "ALL")
@@ -149,7 +143,7 @@ if not df.empty:
     sorted_years = sorted(df[COL_YEAR].unique(), reverse=True)
     YEAR_OPTIONS = np.insert(sorted_years, 0, "ALL")
 
-    # New filter options for Visualizations page
+    # Filter options for the dashboard
     MONTH_OPTIONS_VIZ = ["ALL"] + [MONTH_NAMES[i] for i in range(1, 13)]
     WEEKDAY_OPTIONS_VIZ = ["ALL", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     TIME_OF_DAY_OPTIONS_VIZ = ["ALL", "Morning", "Afternoon", "Evening", "Midnight"]
@@ -409,7 +403,7 @@ def create_forecast_chart(df, selected_barangays=None):
         ),
         plot_bgcolor='white',
         paper_bgcolor='white',
-        margin=dict(t=80, b=40, l=60, r=40), # Increased top margin for larger title
+        margin=dict(t=80, b=40, l=60, r=40),
         height=500,
         hovermode="x unified",
         legend=dict(
@@ -604,20 +598,6 @@ def aggregate(df):
             df[col] = 0
         print("Warning: Missing columns filled with 0.")
 
-    # DEBUG: Check data quality before aggregation
-    print(f"\nData Quality Check BEFORE aggregation:")
-    print(f"   Total rows: {len(df)}")
-    print(f"   Rows with missing Weekday: {df['Weekday'].isna().sum()}")
-    print(f"   Rows with missing Time_of_Day: {df['Time_of_Day'].isna().sum()}")
-    print(f"   Rows with missing Month: {df['Month'].isna().sum()}")
-
-    # Check BALIBAGO specifically
-    balibago_before = df[(df['Barangay'] == 'BALIBAGO') & (df['Month'] == 1) & (df['Day_of_Week'] == 'Monday')]
-    print(f"   BALIBAGO, January, Monday rows BEFORE aggregation: {len(balibago_before)}")
-    if len(balibago_before) > 0:
-        print(f"   Time_of_Day distribution: {balibago_before['Time_of_Day'].value_counts().to_dict()}")
-        print(f"   Weekday values: {balibago_before['Weekday'].unique()}")
-
     # Clean data: Remove rows with missing critical grouping columns
     df_clean = df.dropna(subset=['Barangay', 'Month', 'Weekday', 'Time_of_Day'])
     rows_dropped = len(df) - len(df_clean)
@@ -659,18 +639,6 @@ def aggregate(df):
     agg_df['Crime_Count_Lag2'] = agg_df.groupby('Barangay')['Crime_Count'].shift(2)
     agg_df['Crime_Count_Rolling_3m'] = agg_df.groupby('Barangay')['Crime_Count'].rolling(3).mean().reset_index(drop=True)
 
-    # DEBUG: Check BALIBAGO after aggregation but before dropna
-    balibago_after = agg_df[(agg_df['Barangay'] == 'BALIBAGO') & (agg_df['Month'] == 1) & (agg_df['Weekday'] == 1)]
-    print(f"\nAfter aggregation (before dropna):")
-    print(f"   BALIBAGO, January, Weekday=1 rows: {len(balibago_after)}")
-    if len(balibago_after) > 0:
-        print(f"   Time_of_Day values: {balibago_after['Time_of_Day'].tolist()}")
-        print(f"   Crime counts: {balibago_after['Crime_Count'].tolist()}")
-        # Check for NaN values
-        print(f"   Rows with ANY NaN: {balibago_after.isna().any(axis=1).sum()}")
-        if balibago_after.isna().any(axis=1).sum() > 0:
-            print(f"   Columns with NaN in these rows: {balibago_after.columns[balibago_after.isna().any()].tolist()}")
-
     # Only drop rows missing the 7 features the model actually uses
     prediction_features = [
         'Population', 'Area_sqkm', 'Avg_Num_Stations_1km',
@@ -685,20 +653,7 @@ def aggregate(df):
     if rows_dropped_by_dropna > 0:
         print(f"Dropped {rows_dropped_by_dropna} rows missing prediction features")
 
-    # DEBUG: Check BALIBAGO after dropna
-    balibago_final = agg_df[(agg_df['Barangay'] == 'BALIBAGO') & (agg_df['Month'] == 1) & (agg_df['Weekday'] == 1)]
-    print(f"\nAfter dropna (FINAL):")
-    print(f"   BALIBAGO, January, Weekday=1 rows: {len(balibago_final)}")
-    if len(balibago_final) > 0:
-        print(f"   Time_of_Day values: {balibago_final['Time_of_Day'].tolist()}")
-        print(f"   Crime counts: {balibago_final['Crime_Count'].tolist()}")
-
-    print(f"\nAggregated dataset shape: {agg_df.shape}")
-    print(f"   Original training shape was (2505, 30)")
-    if len(agg_df) > 2505:
-        extra_rows = len(agg_df) - 2505
-        print(f"   {extra_rows} additional rows preserved (had NaN in unused lag features)")
-        print(f"   This is GOOD - we now correctly show historical crime data that was mistakenly excluded!")
+    print(f"Aggregated dataset shape: {agg_df.shape}")
     return agg_df
 
 
@@ -713,21 +668,8 @@ try:
     AGGREGATED_DF = aggregate(model_source_df)
 
     print(f"Aggregation complete. Final lookup table shape: {AGGREGATED_DF.shape}")
-    print(f"   Expected shape: (2505, 30) - matches xgboost_model.py training data")
 
-    # Print sample of aggregated data for debugging
-    print("\nSample of AGGREGATED_DF (first 3 rows):")
-    print(AGGREGATED_DF[['Barangay', 'Month', 'Weekday', 'Time_of_Day', 'Crime_Count']].head(3))
-
-    # Check for BALIBAGO specifically
-    balibago_data = AGGREGATED_DF[(AGGREGATED_DF['Barangay'] == 'BALIBAGO') &
-                                   (AGGREGATED_DF['Month'] == 1) &
-                                   (AGGREGATED_DF['Weekday'] == 1)]
-    print(f"\nBALIBAGO data for January, Monday (Weekday=1): {len(balibago_data)} rows found")
-    if not balibago_data.empty:
-        print(balibago_data[['Barangay', 'Month', 'Weekday', 'Time_of_Day', 'Crime_Count']])
-
-    # Create a barangay demographics lookup (Population and Area for each barangay)
+    # Population and area per barangay, for the map popups
     BARANGAY_DEMOGRAPHICS = {}
     if not AGGREGATED_DF.empty:
         for barangay in AGGREGATED_DF['Barangay'].unique():
