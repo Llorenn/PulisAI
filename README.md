@@ -113,6 +113,51 @@ performance; macro-F1 and unweighted average recall are the metrics that move.
 **The numbers this repository prints are not those numbers.** They come from
 generated data and will change with `--seed`.
 
+## Results
+
+The figures below are from the published paper and were computed on the real
+ACPO dataset — 3,593 incidents from 2017–2024, aggregated into 2,571
+spatio-temporal blocks, split 75/25 with stratification. **Running this
+repository reproduces the method, not these numbers**, because the incident
+data here is generated. Everything in this section is aggregate model
+performance; no incident record appears in any of it.
+
+**Why tree-based models.** Of the seven features, only population shows even a
+moderate linear relationship with crime count (r = 0.32). Land area, station
+proximity, weekend ratio and average hour all sit at or below r = 0.09. Linear
+models have almost nothing to work with here, which is what motivated the
+ensemble methods.
+
+![Feature correlation matrix](docs/figures/correlation-matrix.png)
+
+**Model comparison.** Four algorithms, each trained on the imbalanced data and
+again on a SMOTE-balanced set. XGBoost without SMOTE wins on every metric, and
+oversampling made every model worse — the downward slope from "Without SMOTE"
+to "With SMOTE" is visible for SVM and Random Forest in particular. Padding the
+1,928 training rows out to 4,251 synthetic ones produced overfitting rather
+than better generalisation: the underlying records were too few to carry the
+variance SMOTE assumes.
+
+![Test accuracy across model architectures](docs/figures/model-comparison.png)
+
+**Where it fails.** Accuracy is the wrong headline on a set this skewed, so the
+confusion matrix matters more. Low is near-perfect (472/473). The cost lands on
+the minority classes: recall is 0.76 for both Medium and High. Most important
+is the bottom-left cell — 10 of 54 true High blocks predicted Low, an 18.52%
+dangerous-misclassification rate. That is the failure that would send minimal
+patrol resources to a high-risk barangay, and it is the number to beat.
+
+![Confusion matrix](docs/figures/confusion-matrix.png)
+
+**Separability.** AUC is 0.9564 for Low, 0.9356 for Medium and 0.9813 for High.
+The High class separating most cleanly is the useful result operationally — it
+is the class the tool exists to find.
+
+![Multiclass ROC curve](docs/figures/roc-curve.png)
+
+Full methodology, hyperparameter grids and the ISO 25010 evaluation are in the
+paper: [10.5120/ijca53573a50813e](https://doi.org/10.5120/ijca53573a50813e).
+
 ## Real vs. synthetic
 
 | | Source |
