@@ -116,11 +116,24 @@ generated data and will change with `--seed`.
 ## Results
 
 The figures below are from the published paper and were computed on the real
-ACPO dataset — 3,593 incidents from 2017–2024, aggregated into 2,571
-spatio-temporal blocks, split 75/25 with stratification. **Running this
-repository reproduces the method, not these numbers**, because the incident
-data here is generated. Everything in this section is aggregate model
-performance; no incident record appears in any of it.
+ACPO dataset. **Running this repository reproduces the method, not these
+numbers**, because the incident data here is generated. Everything in this
+section is aggregate model performance; no incident record appears in any of
+it.
+
+The dataset narrows at each stage, so different counts describe different
+points in the pipeline:
+
+| Stage | Count |
+|---|---|
+| Raw ACPO incidents, all offense types, Jan 2017 – Apr 2025 | 11,896 |
+| Restricted to the eight focus crimes, scoped to 2017–2024 | 3,593 |
+| 2025 incidents, held out as a final test set | 85 |
+| Aggregated into spatio-temporal blocks | 2,571 |
+| Stratified 75/25 split | 1,928 / 643 |
+
+The raw set also linked 19,740 suspect and 7,592 victim records, aggregated
+onto their incidents during preprocessing.
 
 **Why tree-based models.** Of the seven features, only population shows even a
 moderate linear relationship with crime count (r = 0.32). Land area, station
