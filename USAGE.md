@@ -151,4 +151,3 @@ error is shown and **the existing model is left untouched**.
 | Map blank | `angeles_city_barangays.geojson` missing from the project root |
 | Every selected barangay comes back Low with `N/A` fields | No historical record for that exact combination — try a broader one |
 | Upload rejected | One of the three files missing, or a required column absent |
-| Date range filter returns nothing | Known issue on pandas 3.x; `requirements.txt` pins pandas 2.x |

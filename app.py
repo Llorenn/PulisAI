@@ -204,11 +204,20 @@ def filter_dataframe(crime_list, year_list, month_list=None, weekday_list=None,t
     if time_of_day_list and "ALL" not in time_of_day_list:
         filtered_df = filtered_df[filtered_df['Time_of_Day'].isin(time_of_day_list)]
 
-    # Filter by Date Range
-    if start_date:
-        filtered_df = filtered_df[filtered_df[COL_DATE] >= start_date]
-    if end_date:
-        filtered_df = filtered_df[filtered_df[COL_DATE] <= end_date]
+    # Filter by Date Range. COL_DATE is ISO strings on the startup frame but
+    # datetime64 on the retrained one, and the bounds always arrive as strings
+    # from the query string. Coerce both sides so the comparison holds either
+    # way -- comparing the two dtypes directly matches nothing on pandas 3.
+    if start_date or end_date:
+        dates = pd.to_datetime(filtered_df[COL_DATE], errors='coerce', dayfirst=True)
+        mask = pd.Series(True, index=filtered_df.index)
+        start = pd.to_datetime(start_date, errors='coerce') if start_date else pd.NaT
+        end = pd.to_datetime(end_date, errors='coerce') if end_date else pd.NaT
+        if pd.notna(start):
+            mask &= dates >= start
+        if pd.notna(end):
+            mask &= dates <= end
+        filtered_df = filtered_df[mask]
 
     return filtered_df
 
